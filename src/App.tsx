@@ -3,7 +3,7 @@ import ChatInterface from "./components/ChatComponent";
 
 function App() {
     return (
-        <div>
+        <div className="max-w-[1920px] mx-auto max-h-[1080px]">
             <ChatInterface />
         </div>
     );
