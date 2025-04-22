@@ -56,7 +56,7 @@ const ChatInterface: React.FC = () => {
                     // Format conversations for display
                     const formattedChats = result.chats.map(chat => ({
                         id: chat.chat_id,
-                        title: ` ${chat.chat_id.substring(0, 10)}...`,
+                        title: chat.title,
                         created_at: chat.created_at
                     }));
                     setConversations(formattedChats);
@@ -155,14 +155,16 @@ const ChatInterface: React.FC = () => {
         try {
             // Send message to API using the chat ID (either existing or newly created)
             const response = await apiService.sendMessage(inputMessage, currentChatId);
-
+            if (!currentChatId && response.chat_id) {
+                setCurrentChatId(response.chat_id);
+            }
             // Refresh conversations list if we created a new chat
             if (!currentChatId) {
                 const result = await apiService.getCompanyChats();
                 if (result.chats && Array.isArray(result.chats)) {
                     const formattedChats = result.chats.map(chat => ({
                         id: chat.chat_id,
-                        title: `Chat ${chat.chat_id.substring(0, 8)}...`,
+                        title: chat.title,
                         created_at: chat.created_at
                     }));
                     setConversations(formattedChats);
@@ -370,6 +372,7 @@ const ChatInterface: React.FC = () => {
                 <div className={`p-4 pb-6 flex flex-col w-full ${chatHistory.length > 0 ? 'shadow-inner ' : 'absolute top-[60%] xl:top-[55%] '} bg-white`}>
                     <div className={`bg-white ${chatHistory.length === 0 ? 'w-3xl drop-shadow-2xl shadow-2xl ' : 'w-full'} min-h-24 rounded-3xl border border-gray-200 flex flex-col items-center mx-auto`}>
                         <input
+                            dir={"rtl"}
                             type="text"
                             className="flex-1 w-full py-3 px-4 text-right bg-transparent focus:outline-none text-gray-600 placeholder-gray-400"
                             placeholder="هر چی می‌خواهی بپرس"
@@ -451,9 +454,10 @@ const ChatInterface: React.FC = () => {
                     {isSearchBarVisible && (
                         <div className="relative mb-4">
                             <input
+                                dir={"rtl"}
                                 type="text"
                                 className="w-full px-4  py-2 text-right bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-600 placeholder-gray-400"
-                                placeholder=" ...جستجو"
+                                placeholder=" جستجو ..."
                                 value={searchQuery}
                                 onChange={handleSearchChange}
                                 autoFocus
@@ -490,7 +494,8 @@ const ChatInterface: React.FC = () => {
                                     {groupedConvs.today.map((conv) => (
                                         <div
                                             key={conv.id}
-                                            className={`text-sm text-right text-[$141B34] cursor-pointer hover:bg-gray-200 p-2 rounded ${currentChatId === conv.id ? 'bg-gray-200' : ''}`}
+                                            dir={"rtl"}
+                                            className={`text-sm text-right  text-[$141B34] cursor-pointer hover:bg-gray-200 p-2 rounded ${currentChatId === conv.id ? 'bg-gray-200' : ''}`}
                                             onClick={() => handleSelectConversation(conv.id)}
                                         >
                                             {conv.title}
@@ -507,6 +512,7 @@ const ChatInterface: React.FC = () => {
                                     {groupedConvs.week.map((conv) => (
                                         <div
                                             key={conv.id}
+                                            dir={"rtl"}
                                             className={`text-sm text-right text-[$141B34] cursor-pointer hover:bg-gray-200 p-2 rounded ${currentChatId === conv.id ? 'bg-gray-200' : ''}`}
                                             onClick={() => handleSelectConversation(conv.id)}
                                         >
@@ -524,6 +530,7 @@ const ChatInterface: React.FC = () => {
                                     {groupedConvs.month.map((conv) => (
                                         <div
                                             key={conv.id}
+                                            dir={"rtl"}
                                             className={`text-sm text-right text-[$141B34] cursor-pointer hover:bg-gray-200 p-2 rounded ${currentChatId === conv.id ? 'bg-gray-200' : ''}`}
                                             onClick={() => handleSelectConversation(conv.id)}
                                         >
@@ -541,6 +548,7 @@ const ChatInterface: React.FC = () => {
                                     {groupedConvs.older.map((conv) => (
                                         <div
                                             key={conv.id}
+                                            dir={"rtl"}
                                             className={`text-sm text-right text-[$141B34] cursor-pointer hover:bg-gray-200 p-2 rounded ${currentChatId === conv.id ? 'bg-gray-200' : ''}`}
                                             onClick={() => handleSelectConversation(conv.id)}
                                         >

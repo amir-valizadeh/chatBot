@@ -14,6 +14,7 @@ interface CompanyChatResponse {
     chats: Array<{
         chat_id: string;
         created_at: string;
+        title: string;
     }>;
 }
 
@@ -76,7 +77,7 @@ const apiService = {
     },
 
     // Send a message to chat
-    sendMessage: async (message: string, chatId?: string|undefined, systemPrompt?: string): Promise<ChatResponse> => {
+    sendMessage: async (message: string, chatId?: string|null, systemPrompt?: string): Promise<ChatResponse> => {
         try {
             const payload: {
                 message: string;
