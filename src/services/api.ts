@@ -5,11 +5,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://hurosh.pegahea
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'pegah';
 
 // Define interfaces for API responses
-// interface CreateChatResponse {
-//     message: string;
-//     chat_id: string;
-// }
-
 interface CompanyChatResponse {
     chats: Array<{
         chat_id: string;
@@ -24,6 +19,8 @@ interface ChatHistoryResponse {
         role: 'user' | 'assistant';
         content: string;
         timestamp: string;
+        server_filename?: string;
+        image_name?: string;
     }>;
 }
 
@@ -32,28 +29,31 @@ interface ChatResponse {
     chat_id: string;
 }
 
+interface FileUploadResponse {
+    message: string;
+    original_filename: string;
+    server_filename: string;
+}
+
+interface ImageUploadResponse {
+    message: string;
+    filename: string;
+    file_path: string;
+}
+interface ChatPayload {
+    message: string;
+    company_name: string;
+    chat_id?: string;
+    system_prompt?: string;
+    model?: string;
+    temperature?: number;
+    server_filename?: string;
+    image_name?: string;
+}
+
+
 // API service for chat operations
 const apiService = {
-    // Create a new chat
-    // createChat: async (): Promise<CreateChatResponse> => {
-    //     try {
-    //         const response = await fetch(`${API_BASE_URL}/create-chat`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //                 company_name: COMPANY_NAME,
-    //             }),
-    //         });
-    //
-    //         return await response.json();
-    //     } catch (error) {
-    //         console.error('Error creating chat:', error);
-    //         throw error;
-    //     }
-    // },
-
     // Get all chats for the company
     getCompanyChats: async (): Promise<CompanyChatResponse> => {
         try {
@@ -77,14 +77,18 @@ const apiService = {
     },
 
     // Send a message to chat
-    sendMessage: async (message: string, chatId?: string|null, systemPrompt?: string): Promise<ChatResponse> => {
+    sendMessage: async (
+        message: string,
+        chatId?: string | null,
+        systemPrompt?: string,
+        model?: string,
+        temperature?: number,
+        serverFilename?: string,
+        imageName?: string
+    ): Promise<ChatResponse> => {
         try {
-            const payload: {
-                message: string;
-                company_name: string;
-                chat_id?: string;
-                system_prompt?: string;
-            } = {
+
+            const payload: ChatPayload = {
                 message,
                 company_name: COMPANY_NAME,
             };
@@ -99,6 +103,22 @@ const apiService = {
                 payload.system_prompt = systemPrompt;
             }
 
+            if (model) {
+                payload.model = model;
+            }
+
+            if (temperature) {
+                payload.temperature = temperature;
+            }
+
+            if (serverFilename) {
+                payload.server_filename = serverFilename;
+            }
+
+            if (imageName) {
+                payload.image_name = imageName;
+            }
+
             const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: 'POST',
                 headers: {
@@ -110,6 +130,44 @@ const apiService = {
             return await response.json();
         } catch (error) {
             console.error('Error sending message:', error);
+            throw error;
+        }
+    },
+
+    // Upload a file
+    uploadFile: async (file: File): Promise<FileUploadResponse> => {
+        try {
+            const formData = new FormData();
+            formData.append('company_name', COMPANY_NAME);
+            formData.append('file', file);
+
+            const response = await fetch(`${API_BASE_URL}/upload-file`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            throw error;
+        }
+    },
+
+    // Upload an image
+    uploadImage: async (image: File): Promise<ImageUploadResponse> => {
+        try {
+            const formData = new FormData();
+            formData.append('company_name', COMPANY_NAME);
+            formData.append('image', image);
+
+            const response = await fetch(`${API_BASE_URL}/upload-image`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error uploading image:', error);
             throw error;
         }
     }
