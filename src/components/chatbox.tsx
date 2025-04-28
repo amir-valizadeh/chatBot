@@ -1,11 +1,10 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import type { Components } from 'react-markdown';
+import { Message } from "./ChatComponent.tsx";
 
-import {Message} from "./ChatComponent.tsx";
-
-// Helper function to detect RTL text
 const isRTL = (text: string) => {
     const farsiPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
     const latinPattern = /[A-Za-z]/g;
@@ -17,7 +16,62 @@ const isRTL = (text: string) => {
 };
 
 // Chat message component with markdown support
-const ChatMessages = ({ chatHistory}:{chatHistory:Message[] }) => {
+const ChatMessages = ({ chatHistory }: { chatHistory: Message[] }) => {
+
+    const markdownComponents: Components = {
+        code: ({ className, children, ...props }) => {
+            const match = /language-(\w+)/.exec(className || '');
+            const language = match ? match[1] : '';
+            const isInline = !className || className.indexOf('language-') === -1;
+
+            if (!isInline && language ) {
+                return (
+                    <SyntaxHighlighter
+                        style={dark}
+                        language={language}
+                        PreTag="div"
+                        {...props}
+                    >
+                        {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                );
+            }
+
+            return isInline ? (
+                <code className="bg-gray-200 px-1 py-0.5 rounded text-red-500" {...props}>
+                    {children}
+                </code>
+            ) : (
+                <SyntaxHighlighter
+                    style={dark }
+                    language="text"
+                    PreTag="div"
+                    {...props}
+                >
+                    {String(children).replace(/\n$/, '')}
+                </SyntaxHighlighter>
+            );
+        },
+        // Customize other markdown elements with proper typing
+        h3: ({ children }) => <h3 className="text-lg font-bold mt-4 mb-2">{children}</h3>,
+        ul: ({ children }) => (
+            <ul className="list-inside pl-0 rtl:pr-0 mb-4" style={{ listStylePosition: 'inside' }}>
+                {children}
+            </ul>
+        ),
+        ol: ({ children }) => (
+            <ol className="list-inside pl-0 rtl:pr-0 mb-4" style={{ listStylePosition: 'inside' }}>
+                {children}
+            </ol>
+        ),
+        li: ({ children }) => <li className="mb-1">{children}</li>,
+        p: ({ children }) => <p className="mb-2">{children}</p>,
+        a: ({ href, children }) => (
+            <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                {children}
+            </a>
+        ),
+    };
 
     return (
         <div className="flex flex-col w-full">
@@ -41,70 +95,19 @@ const ChatMessages = ({ chatHistory}:{chatHistory:Message[] }) => {
                         >
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
-                                components={{
-                                    code({node, inline, className, children, ...props}) {
-                                        const match = /language-(\w+)/.exec(className || '');
-                                        const language = match ? match[1] : '';
-
-                                        if (!inline && language) {
-                                            return (
-                                                <SyntaxHighlighter
-                                                    style={tomorrow}
-                                                    language={language}
-                                                    PreTag="div"
-                                                    {...props}
-                                                >
-                                                    {String(children).replace(/\n$/, '')}
-                                                </SyntaxHighlighter>
-                                            );
-                                        }
-
-                                        return inline ? (
-                                            <code className="bg-gray-200 px-1 py-0.5 rounded text-red-500" {...props}>
-                                                {children}
-                                            </code>
-                                        ) : (
-                                            <SyntaxHighlighter
-                                                style={tomorrow}
-                                                language="text"
-                                                PreTag="div"
-                                                {...props}
-                                            >
-                                                {String(children).replace(/\n$/, '')}
-                                            </SyntaxHighlighter>
-                                        );
-                                    },
-                                    // Customize other markdown elements as needed
-                                    h3: ({children}) => <h3 className="text-lg font-bold mt-4 mb-2">{children}</h3>,
-                                    ul: ({children}) => (
-                                        <ul className="list-inside pl-0 rtl:pr-0 mb-4" style={{ listStylePosition: 'inside' }}>
-                                            {children}
-                                        </ul>
-                                    ),
-                                    ol: ({children}) => (
-                                        <ol className="list-inside pl-0 rtl:pr-0 mb-4" style={{ listStylePosition: 'inside' }}>
-                                            {children}
-                                        </ol>
-                                    ),
-                                    li: ({children}) => <li className="mb-1">{children}</li>,
-                                    p: ({children}) => <p className="mb-2">{children}</p>,
-                                    a: ({href, children}) => (
-                                        <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                                            {children}
-                                        </a>
-                                    ),
-                                }}
+                                components={markdownComponents}
                             >
                                 {message.text}
                             </ReactMarkdown>
                         </div>
-                            {renderAttachment(message)}
+                        {renderAttachment(message)}
                     </div>
                 </div>
             ))}
         </div>
     );
 };
+
 const handleDownload = (isImage: boolean, filename: string): void => {
     const baseUrl = isImage
         ? `${import.meta.env.VITE_API_BASE_URL || 'http://hurosh.pegaheaftab.com/backend'}/get-image/${import.meta.env.VITE_COMPANY_NAME || 'pegah'}/${filename}`
@@ -113,6 +116,7 @@ const handleDownload = (isImage: boolean, filename: string): void => {
     // Open in new tab or trigger download
     window.open(baseUrl, '_blank');
 };
+
 const renderAttachment = (message: Message) => {
     if (message.server_filename) {
         return (
