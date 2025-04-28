@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Attatchment01, ExploreIcon, Frame, NewChatIcon, Sidebar, Vector } from "../icons";
 import Logo from '../../public/logo.png';
 import apiService from "../services/api";
+import ChatMessages from "./chatbox.tsx";
 
 
 interface Conversation {
@@ -10,7 +11,7 @@ interface Conversation {
     created_at: string;
 }
 
-interface Message {
+export interface Message {
     id: number;
     text: string;
     sender: 'user' | 'bot' | string;
@@ -361,14 +362,7 @@ const ChatInterface: React.FC = () => {
         }
     };
 
-    const handleDownload = (isImage: boolean, filename: string): void => {
-        const baseUrl = isImage
-            ? `${import.meta.env.VITE_API_BASE_URL || 'http://hurosh.pegaheaftab.com/backend'}/get-image/${import.meta.env.VITE_COMPANY_NAME || 'pegah'}/${filename}`
-            : `${import.meta.env.VITE_API_BASE_URL || 'http://hurosh.pegaheaftab.com/backend'}/download-file/${import.meta.env.VITE_COMPANY_NAME || 'pegah'}/${filename}`;
 
-        // Open in new tab or trigger download
-        window.open(baseUrl, '_blank');
-    };
 
     // Scroll to bottom when chat history changes
     useEffect(() => {
@@ -404,13 +398,13 @@ const ChatInterface: React.FC = () => {
         convsToGroup.forEach(conv => {
             const convDate = new Date(conv.created_at);
             if (convDate.toDateString() === today.toDateString()) {
-                groupedConversations.today.push(conv);
+                groupedConversations.today.unshift(conv);
             } else if (convDate >= oneWeekAgo) {
-                groupedConversations.week.push(conv);
+                groupedConversations.week.unshift(conv);
             } else if (convDate >= oneMonthAgo) {
-                groupedConversations.month.push(conv);
+                groupedConversations.month.unshift(conv);
             } else {
-                groupedConversations.older.push(conv);
+                groupedConversations.older.unshift(conv);
             }
         });
 
@@ -442,24 +436,6 @@ const ChatInterface: React.FC = () => {
         );
     };
 
-    const renderAttachment = (message: Message) => {
-        if (message.server_filename) {
-            return (
-                <div className="mt-2 text-xs md:text-xs text-blue-500 cursor-pointer" onClick={() => handleDownload(false, message.server_filename!)}>
-                    دانلود فایل
-                </div>
-            );
-        } else if (message.image_name) {
-            return (
-                <div className="mt-2">
-                    <div className="text-xs md:text-xs text-blue-500 cursor-pointer" onClick={() => handleDownload(true, message.image_name!)}>
-                        دانلود تصویر
-                    </div>
-                </div>
-            );
-        }
-        return null;
-    };
 
     // Determine if we're in mobile view
     const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -504,30 +480,14 @@ const ChatInterface: React.FC = () => {
                     {!isMessageLoading && !isChatHistoryLoading && chatHistory.length === 0 ? (
                         // Empty state with prompt
                         <div className="flex flex-col w-full items-center justify-center relative">
-                            <h2 className="text-xl text-gray-800 font-normal text-center w-full md:w-4/5 sm:w-full px-4">من هوروش هستم, دستیار فنی هوشمند شما, چطور می‌توانم کمک کنم؟</h2>
+                            <h2 className="text-xl text-gray-800 font-normal text-center w-full md:w-4/5 sm:w-full px-4">من هوروش هستم, دستیار فنی هوشمند, چطور می‌توانم کمک کنم؟</h2>
                         </div>
                     ) : isChatHistoryLoading ? (
                         // Show skeleton while loading chat history
                         <ChatSkeleton />
                     ) : (
                         // Chat messages
-                        chatHistory.map((message) => (
-                            <div
-                                key={message.id}
-                                className={`max-w-3/4 md:max-w-3/4 sm:max-w-[85%] mb-4 ${message.sender === 'user' ? 'self-end' : 'self-start'}`}
-                            >
-                                <div
-                                    className={`p-3 rounded-lg ${
-                                        message.sender === 'user'
-                                            ? 'bg-blue-100 text-right'
-                                            : 'bg-gray-100 text-right'
-                                    }`}
-                                >
-                                    {message.text}
-                                    {renderAttachment(message)}
-                                </div>
-                            </div>
-                        ))
+                        <ChatMessages chatHistory={chatHistory}/>
                     )}
 
                     {isMessageLoading && (
@@ -553,7 +513,7 @@ const ChatInterface: React.FC = () => {
                                 dir={"rtl"}
                                 type="text"
                                 className="flex-1 w-full py-3 px-4 text-right bg-transparent focus:outline-none text-gray-600 placeholder-gray-400 text-sm md:text-base"
-                                placeholder="هر چی می‌خواهی بپرس"
+                                placeholder="هر چی می‌خواهی بپرس."
                                 value={inputMessage}
                                 onChange={handleInputChange}
                                 onKeyPress={handleKeyPress}
@@ -732,7 +692,7 @@ const ChatInterface: React.FC = () => {
 const CopyrightFooter: React.FC = () => {
     return (
         <div className="fixed bottom-0 left-0 w-full text-center p-2 text-xs md:text-xs text-gray-500 bg-white border-t border-gray-100">
-            © 2025 <a className="text-blue-500" href="/" >Pegah-e-Aftab Company</a>. All rights reserved.
+            © 2025 <a className="text-blue-500" href="https://pegaheaftab.com/" >Pegah-e-Aftab Company</a>. All rights reserved.
         </div>
     );
 };

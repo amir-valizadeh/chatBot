@@ -3,7 +3,7 @@ import ChatInterface from "./components/ChatComponent";
 
 function App() {
     return (
-        <div className="w-full  mx-auto">
+        <div className="w-full  mx-auto font-vazirmatn">
             <ChatInterface />
         </div>
     );
