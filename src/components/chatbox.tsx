@@ -5,6 +5,7 @@ import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
 import { Message } from "./ChatComponent.tsx";
 
+
 const isRTL = (text: string) => {
     const farsiPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
     const latinPattern = /[A-Za-z]/g;
@@ -19,7 +20,8 @@ const isRTL = (text: string) => {
 const ChatMessages = ({ chatHistory }: { chatHistory: Message[] }) => {
 
     const markdownComponents: Components = {
-        code: ({ className, children, ...props }) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        code: ({ className, children,style, ref, ...props }) => {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const isInline = !className || className.indexOf('language-') === -1;
@@ -27,10 +29,11 @@ const ChatMessages = ({ chatHistory }: { chatHistory: Message[] }) => {
             if (!isInline && language ) {
                 return (
                     <SyntaxHighlighter
-                        style={dark}
                         language={language}
                         PreTag="div"
                         {...props}
+                        style={dark}
+
                     >
                         {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
@@ -43,10 +46,11 @@ const ChatMessages = ({ chatHistory }: { chatHistory: Message[] }) => {
                 </code>
             ) : (
                 <SyntaxHighlighter
-                    style={dark }
                     language="text"
                     PreTag="div"
                     {...props}
+                    style={dark }
+
                 >
                     {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
